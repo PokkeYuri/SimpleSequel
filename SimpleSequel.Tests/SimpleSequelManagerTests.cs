@@ -21,8 +21,8 @@
         public void T_ExecuteSequel_WithType()
         {
             string statement = "SELECT Name FROM Students WHERE Id = 1";
-            var result = SimpleSequelManager.Instance.ExecuteSequel(statement, command => command.ExecuteScalar());
-            Assert.AreEqual("Picard", result?.ToString());
+            var result = SimpleSequelManager.Instance.ExecuteSequel<string>(statement, command => command.ExecuteScalar());
+            Assert.AreEqual("Picard", result);
         }
 
         [TestMethod]
