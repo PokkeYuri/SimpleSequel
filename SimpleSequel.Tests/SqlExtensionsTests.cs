@@ -1,3 +1,5 @@
+using System.Xml.Linq;
+
 namespace SimpleSequel.Tests
 {
     [TestClass]
@@ -18,6 +20,14 @@ namespace SimpleSequel.Tests
         }
 
         [TestMethod]
+        public async Task T_ExecuteReaderAsync()
+        {
+            var reader = await "SELECT * FROM Students WHERE Id = 1".ExecuteReaderAsync();
+            await reader.ReadAsync();
+            Assert.AreEqual("Picard", (string)reader["Name"]);
+        }
+
+        [TestMethod]
         public void T_ExecuteScalar()
         {
             var result = "SELECT Name FROM Students WHERE Id = 1".ExecuteScalar();
@@ -29,6 +39,36 @@ namespace SimpleSequel.Tests
         {
             var result = await "SELECT Name FROM Students WHERE Id = 1".ExecuteScalarAsync();
             Assert.AreEqual("Picard", result?.ToString());
+        }
+
+        [TestMethod]
+        public void T_ExecuteRow()
+        {
+            var result = "SELECT * FROM Students WHERE Id = 1".ExecuteRow();
+            List<object> expected = [1, "Picard", "Archeology", 5, new DateTime(2013, 10, 07, 08, 23, 19, 120)];
+
+            for(int i = 0; i < expected.Count; i++)
+            {
+                var type = expected[i].GetType();
+                var expectedVal = Convert.ChangeType(expected[i], type);
+                var resultVal = Convert.ChangeType(result[i], type);
+                Assert.AreEqual(expectedVal, resultVal);
+            }
+        }
+
+        [TestMethod]
+        public async Task T_ExecuteRowAsync()
+        {
+            var result = await "SELECT * FROM Students WHERE Id = 1".ExecuteRowAsync();
+            List<object> expected = [1, "Picard", "Archeology", 5, new DateTime(2013, 10, 07, 08, 23, 19, 120)];
+
+            for (int i = 0; i < expected.Count; i++)
+            {
+                var type = expected[i].GetType();
+                var expectedVal = Convert.ChangeType(expected[i], type);
+                var resultVal = Convert.ChangeType(result[i], type);
+                Assert.AreEqual(expectedVal, resultVal);
+            }
         }
 
         [TestMethod]
@@ -96,5 +136,41 @@ namespace SimpleSequel.Tests
             reader.Read();
             Assert.AreEqual("Picard", reader.Get<string>("Name"));
         }
+
+        [TestMethod]
+        public void T_ExecuteClass()
+        {
+            var picardResult = "SELECT * FROM Students WHERE Id = 1".ExecuteClass<SQLiteManager.Student>();
+            var picard = new SQLiteManager.Student
+            {
+                Id = 1,
+                Name = "Picard",
+                Subject = "Archeology",
+                Semester = 5,
+                RegisterDate = new DateTime(2013, 10, 07, 08, 23, 19, 120)
+            };
+            Assert.AreEqual(picardResult, picard);
+
+
+            string name = "Jones";
+            string subject = "Artifacts";
+            int id = 100;
+
+            var command = SimpleSequelManager.Instance.NewCommand();
+            command.CommandText = $"INSERT INTO Students ( Id, Name, Subject ) VALUES ( {id}, '{name}', '{subject}' )";
+            command.ExecuteNonQuery();
+
+            var jonesResult = $"SELECT * FROM Students WHERE Name = '{name}'".ExecuteClass<SQLiteManager.Student>();
+            var jones = new SQLiteManager.Student
+            {
+                Id = id,
+                Name = name,
+                Subject = subject,
+                Semester = null,
+                RegisterDate = null
+            };
+            Assert.AreEqual(jonesResult, jones);
+        }
+
     }
 }

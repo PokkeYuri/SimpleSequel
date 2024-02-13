@@ -1,4 +1,6 @@
-﻿namespace SimpleSequel.Tests
+﻿using System.Runtime.CompilerServices;
+
+namespace SimpleSequel.Tests
 {
     [TestClass]
     public class SimpleSequelManagerTests

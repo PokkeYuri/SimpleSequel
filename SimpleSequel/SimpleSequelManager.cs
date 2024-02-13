@@ -4,7 +4,8 @@ namespace SimpleSequel
 {
     public class SimpleSequelManager
     {
-        private readonly DbConnection _connection;
+        public DbConnection Connection {  get; }
+
         private static SimpleSequelManager? _instance;
 
         public static SimpleSequelManager Instance => _instance
@@ -12,17 +13,17 @@ namespace SimpleSequel
 
         private SimpleSequelManager(DbConnection _connection)
         {
-            this._connection = _connection;
+            this.Connection = _connection;
         }
 
         public static void Initialize(DbConnection Connection) => _instance = new SimpleSequelManager(Connection);
-        public DbCommand NewCommand() => _connection.CreateCommand();
+        public DbCommand NewCommand() => Connection.CreateCommand();
 
 
         public delegate object? StatementExecutionDelegate(DbCommand command);
         public delegate Task<object?> StatemenExecutionDelegateAsync(DbCommand command);
 
-        public object? ExecuteSequel(string statement, StatementExecutionDelegate execution)
+        public object? ExecuteSequel(string statement, StatementExecutionDelegate execution, bool connectionHandling = true)
         {
             if(_instance == null)
                 throw SimpleSequelException.NewNotInitException();
@@ -30,9 +31,9 @@ namespace SimpleSequel
             using DbCommand command = _instance.NewCommand();
             command.CommandText = statement;
 
-            bool IsConnectionOnInputOpen = _instance._connection.State == System.Data.ConnectionState.Open;
+            bool IsConnectionOnInputOpen = _instance.Connection.State == System.Data.ConnectionState.Open;
             if(!IsConnectionOnInputOpen)
-                _instance._connection.Open();
+                _instance.Connection.Open();
 
             try
             {
@@ -45,12 +46,12 @@ namespace SimpleSequel
             }
             finally
             {
-                if(!IsConnectionOnInputOpen)
-                    _instance._connection.Close();
+                if(connectionHandling && !IsConnectionOnInputOpen)
+                    _instance.Connection.Close();
             }
         }
 
-        public async Task<object?> ExecuteSequelAsnyc(string statement, StatemenExecutionDelegateAsync execution)
+        public async Task<object?> ExecuteSequelAsnyc(string statement, StatemenExecutionDelegateAsync execution, bool autocloseConnection = true)
         {
             if (_instance == null) 
                 throw SimpleSequelException.NewNotInitException();
@@ -58,9 +59,9 @@ namespace SimpleSequel
             using DbCommand command = _instance.NewCommand();
             command.CommandText = statement;
 
-            bool IsConnectionOnInputOpen = _instance._connection.State == System.Data.ConnectionState.Open;
+            bool IsConnectionOnInputOpen = _instance.Connection.State == System.Data.ConnectionState.Open;
             if (!IsConnectionOnInputOpen)
-                _instance._connection.Open();
+                await _instance.Connection.OpenAsync();
 
             try
             {
@@ -73,8 +74,8 @@ namespace SimpleSequel
             }
             finally
             {
-                if (!IsConnectionOnInputOpen)
-                    _instance._connection.Close();
+                if (autocloseConnection && !IsConnectionOnInputOpen)
+                    await _instance.Connection.CloseAsync();
             }
         }
 

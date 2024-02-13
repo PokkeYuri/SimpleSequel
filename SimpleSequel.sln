@@ -5,7 +5,7 @@ VisualStudioVersion = 17.8.34525.116
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleSequel", "SimpleSequel\SimpleSequel.csproj", "{C4897F37-E094-4439-8BF6-7FD35C529C82}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleSequel.Tests", "SimpleSequel.Tests\SimpleSequel.Tests.csproj", "{97A1163D-BD45-40A4-989B-898C2B8D3440}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleSequel.Tests", "SimpleSequel.Tests\SimpleSequel.Tests.csproj", "{97A1163D-BD45-40A4-989B-898C2B8D3440}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
