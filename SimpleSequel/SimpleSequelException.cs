@@ -5,9 +5,7 @@
         public string SqlStatement { get; } = string.Empty;
 
         public SimpleSequelException(string message) : base(message) { }
-        public SimpleSequelException(string message, string sqlStatement) : base(message) { }
-        public SimpleSequelException(string message, Exception innerException) : base(message, innerException) { }
-        public SimpleSequelException(string message, string sqlStatement, Exception innerException) : base(message, innerException)
+        public SimpleSequelException(string message, string sqlStatement, Exception? innerException = null) : base(message, innerException)
         {
             SqlStatement = sqlStatement;
         }

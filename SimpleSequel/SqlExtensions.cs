@@ -10,57 +10,13 @@ namespace SimpleSequel
         public static DbDataReader ExecuteReader(this string statement)
         {
             DbDataReader? dbReader= (DbDataReader?)SimpleSequelManager.Instance.ExecuteSequel(statement, command => command.ExecuteReader(), false);
-            return dbReader ?? throw new SimpleSequelException("Null Reference on creating DBDataReader.");
+            return dbReader ?? throw new SimpleSequelException("Null Reference on creating DBDataReader.", statement);
         }
 
         public static async Task<DbDataReader> ExecuteReaderAsync(this string statement)
         {
             DbDataReader? dbReader = (DbDataReader?) await SimpleSequelManager.Instance.ExecuteSequelAsnyc(statement, async command => await command.ExecuteReaderAsync(), false);
-            return dbReader ?? throw new SimpleSequelException("Null Reference on creating DBDataReader.");
-        }
-
-        public static T ExecuteClass<T>(this string statement)
-        {
-            T result = Activator.CreateInstance<T>();
-            using var reader = statement.ExecuteReader();
-
-            bool isConnectionOnInputOpen = SimpleSequelManager.Instance.Connection.State == ConnectionState.Open;
-            if (!isConnectionOnInputOpen)
-                SimpleSequelManager.Instance.Connection.Open();
-
-            int propertieCounter = 0;
-            if (reader.Read())
-            {
-                PropertyInfo[] properties = typeof(T).GetProperties();
-                foreach (PropertyInfo propertyInfo in properties)
-                {
-                    try
-                    {
-                        var value = reader.GetValue(propertyInfo.Name.ToLower());
-                        var type = propertyInfo.PropertyType switch
-                        {
-                            _ when propertyInfo.PropertyType.IsGenericType && propertyInfo.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>) => propertyInfo.PropertyType.GenericTypeArguments[0],
-                            _ => propertyInfo.PropertyType
-                        };
-                        var convertedValue = Convert.ChangeType(value, type);
-                        propertyInfo.SetValue(result, convertedValue);
-                        //Only increment when propertie successfully set value
-                        propertieCounter++;
-                    }
-                    catch
-                    {
-                        continue;
-                    }
-                }
-            }
-
-            if (!isConnectionOnInputOpen)
-                SimpleSequelManager.Instance.Connection.Close();
-
-            if (propertieCounter == 0)
-                throw new SimpleSequelException($"Could not create Class '{typeof(T).Name}' from SQL statement!", statement);
-
-            return result;
+            return dbReader ?? throw new SimpleSequelException("Null Reference on creating DBDataReader.", statement);
         }
 
         public static object? ExecuteScalar(this string statement) => 
@@ -81,32 +37,106 @@ namespace SimpleSequel
         public static async Task ExecuteStatementAsync(this string statement) => 
             await SimpleSequelManager.Instance.ExecuteSequelAsnyc(statement, async command => await command.ExecuteNonQueryAsync());
 
-        public static async Task<List<dynamic>> ExecuteRowAsync(this string statement)
+        public static async Task<List<object>> ExecuteRowAsync(this string statement)
         {
-            var result = new List<dynamic>();
-            using DbDataReader reader = await statement.ExecuteReaderAsync();
-            if (await reader.ReadAsync())
+            bool isConnectionOnInputOpen = SimpleSequelManager.Instance.Connection.State == ConnectionState.Open;
+            try
             {
-                for(int i = 0; i < reader.FieldCount; i++)
+                var result = new List<object>();
+                using DbDataReader reader = await statement.ExecuteReaderAsync();
+                if (await reader.ReadAsync())
                 {
-                    result.Add(reader.GetValue(i));
+                    for (int i = 0; i < reader.FieldCount; i++)
+                    {
+                        result.Add(reader.GetValue(i));
+                    }
                 }
+                return result;
             }
-            return result;
+            catch (Exception ex)
+            {
+                throw new SimpleSequelException(ex.Message, statement, ex);
+            }
+            finally
+            {
+                if (!isConnectionOnInputOpen)
+                    await SimpleSequelManager.Instance.Connection.CloseAsync();
+            }
         }
 
         public static List<object> ExecuteRow(this string statement)
         {
-            var result = new List<object>();
-            using DbDataReader reader = statement.ExecuteReader();
-            if (reader.Read())
+            bool isConnectionOnInputOpen = SimpleSequelManager.Instance.Connection.State == ConnectionState.Open;
+            try
             {
-                for (int i = 0; i < reader.FieldCount; i++)
+                var result = new List<object>();
+                using DbDataReader reader = statement.ExecuteReader();
+                if (reader.Read())
                 {
-                    result.Add(reader.GetValue(i));
+                    for (int i = 0; i < reader.FieldCount; i++)
+                    {
+                        result.Add(reader.GetValue(i));
+                    }
                 }
+                return result;
             }
-            return result;
+            catch (Exception ex)
+            {
+                throw new SimpleSequelException(ex.Message, statement, ex);
+            }
+            finally
+            {
+                if (!isConnectionOnInputOpen)
+                    SimpleSequelManager.Instance.Connection.Close();
+            }
+        }
+
+        public static T? ExecuteClass<T>(this string statement)
+        {
+            bool isConnectionOnInputOpen = SimpleSequelManager.Instance.Connection.State == ConnectionState.Open;
+            try
+            {
+                int propertieCounter = 0;
+                T result = Activator.CreateInstance<T>();
+                using var reader = statement.ExecuteReader();
+                if (reader.Read())
+                {
+                    PropertyInfo[] properties = typeof(T).GetProperties();
+                    foreach (PropertyInfo propertyInfo in properties)
+                    {
+                        try
+                        {
+                            var value = reader.GetValue(propertyInfo.Name.ToLower());
+                            var type = propertyInfo.PropertyType switch
+                            {
+                                _ when propertyInfo.PropertyType.IsGenericType && propertyInfo.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>) => propertyInfo.PropertyType.GenericTypeArguments[0],
+                                _ => propertyInfo.PropertyType
+                            };
+                            var convertedValue = Convert.ChangeType(value, type);
+                            if (convertedValue != null)
+                            {
+                                propertyInfo.SetValue(result, convertedValue);
+                                propertieCounter++;
+                            }
+                        }
+                        catch
+                        {
+                            continue;
+                        }
+                    }
+                }
+
+                return propertieCounter > 0 ? result : default;
+            }
+            catch (Exception ex)
+            {
+                throw new SimpleSequelException(ex.Message, statement, ex);
+            }
+            finally
+            {
+                if (!isConnectionOnInputOpen)
+                    SimpleSequelManager.Instance.Connection.Close();
+            }
         }
 
         public static T? Get<T>(this DbDataReader reader, string columnName, IFormatProvider? formatProvider = null)

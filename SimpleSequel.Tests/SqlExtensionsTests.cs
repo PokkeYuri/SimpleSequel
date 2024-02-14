@@ -17,6 +17,7 @@ namespace SimpleSequel.Tests
             var reader = "SELECT * FROM Students WHERE Id = 1".ExecuteReader();
             reader.Read();
             Assert.AreEqual("Picard", (string)reader["Name"]);
+            SQLiteManager.Instance.Connection.Close();
         }
 
         [TestMethod]
@@ -25,6 +26,7 @@ namespace SimpleSequel.Tests
             var reader = await "SELECT * FROM Students WHERE Id = 1".ExecuteReaderAsync();
             await reader.ReadAsync();
             Assert.AreEqual("Picard", (string)reader["Name"]);
+            await SQLiteManager.Instance.Connection.CloseAsync();
         }
 
         [TestMethod]
@@ -46,7 +48,6 @@ namespace SimpleSequel.Tests
         {
             var result = "SELECT * FROM Students WHERE Id = 1".ExecuteRow();
             List<object> expected = [1, "Picard", "Archeology", 5, new DateTime(2013, 10, 07, 08, 23, 19, 120)];
-
             for(int i = 0; i < expected.Count; i++)
             {
                 var type = expected[i].GetType();
@@ -61,7 +62,6 @@ namespace SimpleSequel.Tests
         {
             var result = await "SELECT * FROM Students WHERE Id = 1".ExecuteRowAsync();
             List<object> expected = [1, "Picard", "Archeology", 5, new DateTime(2013, 10, 07, 08, 23, 19, 120)];
-
             for (int i = 0; i < expected.Count; i++)
             {
                 var type = expected[i].GetType();
@@ -82,6 +82,7 @@ namespace SimpleSequel.Tests
             var reader = command.ExecuteReader();
             reader.Read();
             Assert.AreEqual(subject, (string)reader["Subject"]);
+            SimpleSequelManager.Instance.Connection.Close();
         }
 
         [TestMethod]
@@ -93,8 +94,9 @@ namespace SimpleSequel.Tests
             var command = SimpleSequelManager.Instance.NewCommand();
             command.CommandText = $"SELECT * FROM Students WHERE Name = '{name}'";
             var reader = command.ExecuteReader();
-            reader.Read();
+            await reader.ReadAsync();
             Assert.AreEqual(subject, (string)reader["Subject"]);
+            await SimpleSequelManager.Instance.Connection.CloseAsync();
         }
 
         [TestMethod]
@@ -149,6 +151,7 @@ namespace SimpleSequel.Tests
                 Semester = 5,
                 RegisterDate = new DateTime(2013, 10, 07, 08, 23, 19, 120)
             };
+
             Assert.AreEqual(picardResult, picard);
 
 
@@ -157,8 +160,10 @@ namespace SimpleSequel.Tests
             int id = 100;
 
             var command = SimpleSequelManager.Instance.NewCommand();
+            SimpleSequelManager.Instance.Connection.Open();
             command.CommandText = $"INSERT INTO Students ( Id, Name, Subject ) VALUES ( {id}, '{name}', '{subject}' )";
             command.ExecuteNonQuery();
+            SimpleSequelManager.Instance.Connection.Close();
 
             var jonesResult = $"SELECT * FROM Students WHERE Name = '{name}'".ExecuteClass<SQLiteManager.Student>();
             var jones = new SQLiteManager.Student
@@ -169,6 +174,7 @@ namespace SimpleSequel.Tests
                 Semester = null,
                 RegisterDate = null
             };
+
             Assert.AreEqual(jonesResult, jones);
         }
 

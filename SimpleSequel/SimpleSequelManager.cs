@@ -28,12 +28,12 @@ namespace SimpleSequel
             if(_instance == null)
                 throw SimpleSequelException.NewNotInitException();
 
-            using DbCommand command = _instance.NewCommand();
-            command.CommandText = statement;
-
             bool IsConnectionOnInputOpen = _instance.Connection.State == System.Data.ConnectionState.Open;
             if(!IsConnectionOnInputOpen)
                 _instance.Connection.Open();
+
+            using DbCommand command = _instance.NewCommand();
+            command.CommandText = statement;
 
             try
             {
@@ -56,12 +56,12 @@ namespace SimpleSequel
             if (_instance == null) 
                 throw SimpleSequelException.NewNotInitException();
 
-            using DbCommand command = _instance.NewCommand();
-            command.CommandText = statement;
-
             bool IsConnectionOnInputOpen = _instance.Connection.State == System.Data.ConnectionState.Open;
             if (!IsConnectionOnInputOpen)
                 await _instance.Connection.OpenAsync();
+
+            using DbCommand command = _instance.NewCommand();
+            command.CommandText = statement;
 
             try
             {
