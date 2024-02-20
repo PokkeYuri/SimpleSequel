@@ -19,7 +19,7 @@ namespace SimpleSequel.Tests
             
         public static SQLiteManager Instance { get; } = new SQLiteManager();
 
-        public DbConnection Connection { get; }
+        public SQLiteConnection Connection { get; }
         private SQLiteManager()
         { 
             if(!File.Exists(_filepath))

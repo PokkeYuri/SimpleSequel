@@ -5,8 +5,7 @@ namespace SimpleSequel.Tests
     [TestClass]
     public class SqlExtensionsTests
     {
-        [TestInitialize]
-        public void TestInitialize()
+        public SqlExtensionsTests()
         {
             SimpleSequelManager.Initialize(SQLiteManager.Instance.Connection);
         }
@@ -14,18 +13,22 @@ namespace SimpleSequel.Tests
         [TestMethod]
         public void T_ExecuteReader()
         {
-            var reader = "SELECT * FROM Students WHERE Id = 1".ExecuteReader();
-            reader.Read();
-            Assert.AreEqual("Picard", (string)reader["Name"]);
+            using (var reader = "SELECT * FROM Students WHERE Id = 1".ExecuteReader())
+            {
+                reader.Read();
+                Assert.AreEqual("Picard", (string)reader["Name"]);
+            }
             SQLiteManager.Instance.Connection.Close();
         }
 
         [TestMethod]
         public async Task T_ExecuteReaderAsync()
         {
-            var reader = await "SELECT * FROM Students WHERE Id = 1".ExecuteReaderAsync();
-            await reader.ReadAsync();
-            Assert.AreEqual("Picard", (string)reader["Name"]);
+            using (var reader = await "SELECT * FROM Students WHERE Id = 1".ExecuteReaderAsync())
+            {
+                await reader.ReadAsync();
+                Assert.AreEqual("Picard", (string)reader["Name"]);
+            }
             await SQLiteManager.Instance.Connection.CloseAsync();
         }
 
@@ -40,7 +43,7 @@ namespace SimpleSequel.Tests
         public async Task T_ExecuteScalarAsync()
         {
             var result = await "SELECT Name FROM Students WHERE Id = 1".ExecuteScalarAsync();
-            Assert.AreEqual("Picard", result?.ToString());
+            Assert.AreEqual("Picard", result.ToString());
         }
 
         [TestMethod]
@@ -71,34 +74,7 @@ namespace SimpleSequel.Tests
             }
         }
 
-        [TestMethod]
-        public void T_ExecuteStatement()
-        {
-            string name = "Doc";
-            string subject = "Time Travel";
-            $"INSERT INTO Students ( Name, Subject ) VALUES ( '{name}', '{subject}' )".ExecuteStatement();
-            var command = SimpleSequelManager.Instance.NewCommand();
-            command.CommandText = $"SELECT * FROM Students WHERE Name = '{name}'";
-            var reader = command.ExecuteReader();
-            reader.Read();
-            Assert.AreEqual(subject, (string)reader["Subject"]);
-            SimpleSequelManager.Instance.Connection.Close();
-        }
-
-        [TestMethod]
-        public async Task T_ExecuteStatementAsync()
-        {
-            string name = "Gandalf";
-            string subject = "Magic";
-            await $"INSERT INTO Students ( Name, Subject ) VALUES ( '{name}', '{subject}' )".ExecuteStatementAsync();
-            var command = SimpleSequelManager.Instance.NewCommand();
-            command.CommandText = $"SELECT * FROM Students WHERE Name = '{name}'";
-            var reader = command.ExecuteReader();
-            await reader.ReadAsync();
-            Assert.AreEqual(subject, (string)reader["Subject"]);
-            await SimpleSequelManager.Instance.Connection.CloseAsync();
-        }
-
+      
         [TestMethod]
         public void T_ExecuteToQuerySring()
         {
@@ -120,13 +96,52 @@ namespace SimpleSequel.Tests
         }
 
         [TestMethod]
+        public void T_ExecuteStatement()
+        {
+            string name = "Doc";
+            string subject = "Time Travel";
+            $"INSERT INTO Students ( Name, Subject ) VALUES ( '{name}', '{subject}' )".ExecuteStatement();
+            var command = SimpleSequelManager.Instance.NewCommand();
+            command.CommandText = $"SELECT * FROM Students WHERE Name = '{name}'";
+            SimpleSequelManager.Instance.Connection.Open();
+            using (var reader = command.ExecuteReader())
+            {
+                reader.Read();
+                Assert.AreEqual(subject, (string)reader["Subject"]);
+            }
+            SimpleSequelManager.Instance.Connection.Close();
+        }
+
+
+        [TestMethod]
+        public async Task T_ExecuteStatementAsync()
+        {
+            string name = "Gandalf";
+            string subject = "Magic";
+            await $"INSERT INTO Students ( Name, Subject ) VALUES ( '{name}', '{subject}' )".ExecuteStatementAsync();
+            var command = SimpleSequelManager.Instance.NewCommand();
+            command.CommandText = $"SELECT * FROM Students WHERE Name = '{name}'";
+            await SimpleSequelManager.Instance.Connection.OpenAsync();
+            using (var reader = command.ExecuteReader())
+            {
+                reader.Read();
+                Assert.AreEqual(subject, (string)reader["Subject"]);
+            }
+            await SimpleSequelManager.Instance.Connection.CloseAsync();
+        }
+
+        [TestMethod]
         public void T_Get_DateTime()
         {
             var command = SimpleSequelManager.Instance.NewCommand();
             command.CommandText = "SELECT * FROM Students WHERE Id = 1";
-            var reader = command.ExecuteReader();
-            reader.Read();
-            Assert.AreEqual(new DateTime(2013, 10, 07, 08, 23, 19, 120), reader.Get<DateTime>("RegisterDate"));
+            SimpleSequelManager.Instance.Connection.Open();
+            using (var reader = command.ExecuteReader())
+            {
+                reader.Read();
+                Assert.AreEqual(new DateTime(2013, 10, 07, 08, 23, 19, 120), reader.Get<DateTime>("RegisterDate"));
+            }         
+            SimpleSequelManager.Instance.Connection.Close();
         }
 
         [TestMethod]
@@ -134,9 +149,13 @@ namespace SimpleSequel.Tests
         {
             var command = SimpleSequelManager.Instance.NewCommand();
             command.CommandText = "SELECT * FROM Students WHERE Id = 1";
-            var reader = command.ExecuteReader();
-            reader.Read();
-            Assert.AreEqual("Picard", reader.Get<string>("Name"));
+            SimpleSequelManager.Instance.Connection.Open();
+            using (var reader = command.ExecuteReader())
+            {
+                reader.Read();
+                Assert.AreEqual("Picard", reader.Get<string>("Name"));
+            }
+            SimpleSequelManager.Instance.Connection.Close();
         }
 
         [TestMethod]

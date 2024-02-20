@@ -43,14 +43,17 @@ namespace SimpleSequel
             try
             {
                 var result = new List<object>();
-                using DbDataReader reader = await statement.ExecuteReaderAsync();
-                if (await reader.ReadAsync())
+                using (DbDataReader reader = await statement.ExecuteReaderAsync())
                 {
-                    for (int i = 0; i < reader.FieldCount; i++)
+                    if (await reader.ReadAsync())
                     {
-                        result.Add(reader.GetValue(i));
+                        for (int i = 0; i < reader.FieldCount; i++)
+                        {
+                            result.Add(reader.GetValue(i));
+                        }
                     }
                 }
+
                 return result;
             }
             catch (Exception ex)
@@ -70,14 +73,17 @@ namespace SimpleSequel
             try
             {
                 var result = new List<object>();
-                using DbDataReader reader = statement.ExecuteReader();
-                if (reader.Read())
+                using (DbDataReader reader = statement.ExecuteReader())
                 {
-                    for (int i = 0; i < reader.FieldCount; i++)
+                    if (reader.Read())
                     {
-                        result.Add(reader.GetValue(i));
+                        for (int i = 0; i < reader.FieldCount; i++)
+                        {
+                            result.Add(reader.GetValue(i));
+                        }
                     }
                 }
+
                 return result;
             }
             catch (Exception ex)
@@ -91,53 +97,7 @@ namespace SimpleSequel
             }
         }
 
-        public static T? ExecuteClass<T>(this string statement)
-        {
-            bool isConnectionOnInputOpen = SimpleSequelManager.Instance.Connection.State == ConnectionState.Open;
-            try
-            {
-                int propertieCounter = 0;
-                T result = Activator.CreateInstance<T>();
-                using var reader = statement.ExecuteReader();
-                if (reader.Read())
-                {
-                    PropertyInfo[] properties = typeof(T).GetProperties();
-                    foreach (PropertyInfo propertyInfo in properties)
-                    {
-                        try
-                        {
-                            var value = reader.GetValue(propertyInfo.Name.ToLower());
-                            var type = propertyInfo.PropertyType switch
-                            {
-                                _ when propertyInfo.PropertyType.IsGenericType && propertyInfo.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>) => propertyInfo.PropertyType.GenericTypeArguments[0],
-                                _ => propertyInfo.PropertyType
-                            };
-                            var convertedValue = Convert.ChangeType(value, type);
-                            if (convertedValue != null)
-                            {
-                                propertyInfo.SetValue(result, convertedValue);
-                                propertieCounter++;
-                            }
-                        }
-                        catch
-                        {
-                            continue;
-                        }
-                    }
-                }
-
-                return propertieCounter > 0 ? result : default;
-            }
-            catch (Exception ex)
-            {
-                throw new SimpleSequelException(ex.Message, statement, ex);
-            }
-            finally
-            {
-                if (!isConnectionOnInputOpen)
-                    SimpleSequelManager.Instance.Connection.Close();
-            }
-        }
+        public static T? ExecuteClass<T>(this string statement) => OrmDataHelper.GetClass<T>(statement);
 
         public static T? Get<T>(this DbDataReader reader, string columnName, IFormatProvider? formatProvider = null)
         {
