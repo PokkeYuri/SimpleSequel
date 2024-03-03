@@ -41,36 +41,39 @@ using SimpleSequel;
 
 // Initialize SimpleSequel with your DBMS connection
 SimpleSequelManager.Initialize(DbConnection.Connection);
-``` 
+```
 Below are some examples of how to use SimpleSequel extensions in your .NET applications.
 For more usage and examples please refer to the tests included in the 'SqlExtensionsTests' project within this repository.
 
-### Executing a SQL Query
+### Executing a SQL statement
 ```cs
-using SimpleSequel;
+// Execute a statement
+"INSERT INTO KeyValueTable VALUES ( 'Gandalf', 'Wizard' )".ExecuteStatement();
 
-// Execute a query and get a DbDataReader
-DbDataReader reader = "SELECT * FROM Users".ExecuteReader();
-
-// Execute a query asynchronously and get a DbDataReader
-DbDataReader readerAsync = await "SELECT * FROM Users".ExecuteReaderAsync();
+// Execute a statement async
+await "INSERT INTO KeyValueTable VALUES ( 'Gandalf', 'Wizard' )".ExecuteStatementAsync();
 ```
 
-### Executing a Command and Getting a Scalar Value
+### Execute and getting a custom value
 ```cs
-using SimpleSequel;
-
 // Execute a command and get a scalar value
-var userId = "SELECT UserId FROM Users WHERE Username = 'Gandalf'".ExecuteScalar<int>();
+var value = "SELECT Value FROM KeyValueTable WHERE Key = 'Gandalf'".ExecuteScalar<int>();
 
 // Execute a command asynchronously and get a scalar value
-var userIdAsync = await "SELECT UserId FROM Users WHERE Username = 'Gandalf'".ExecuteScalarAsync<int>();
+var valueAsync = await "SELECT Value FROM KeyValueTable WHERE Key = 'Gandalf'".ExecuteScalarAsync<int>();
 ```
 
-### Fetching a Single Row
+### Executing for SQL query
 ```cs
-using SimpleSequel;
+// Execute a query and get a DbDataReader
+DbDataReader reader = "SELECT * FROM KeyValueTable".ExecuteReader();
 
+// Execute a query asynchronously and get a DbDataReader
+DbDataReader readerAsync = await "SELECT * FROM KeyValueTable".ExecuteReaderAsync();
+```
+
+### Execute and getting an object from custom class
+```cs
 class KeyValue
 {
     public string Key { get; set; }
