@@ -18,7 +18,6 @@ This library requires .NET 8.
 - Fetch and execute from the database with minimal boilerplate code.
 - Execute SQL statements directly from string objects.
 - Easily convert database rows into .NET objects or specific classes.
-- Support for both synchronous and asynchronous operations to suit various application needs. [In progress]
 - Automatically handles the opening and closing of your database connection as necessary.
 
 <!--- 
@@ -30,7 +29,6 @@ To use SimpleSequel in your project, install it via NuGet:
 Install-Package SimpleSequel
 ```
 -->
-
 
 ## Usage
 
@@ -83,6 +81,13 @@ class KeyValue
 // Execute and get only first row as custom object
 KeyValue keyValue = "SELECT * FROM KeyValueTable ORDER BY Key".ExecuteClass<KeyValue>();
 ```
+
+## Todo's
+
+- Add XML documentation comments
+- Complete support for both synchronous and asynchronous operations
+- Implement logging
+- Implement methods using DbParameters to prevent SQL Injections
 
 ## License
 
