@@ -87,6 +87,7 @@ KeyValue keyValue = "SELECT * FROM KeyValueTable ORDER BY Key".ExecuteClass<KeyV
 - Add XML documentation comments
 - Complete support for both synchronous and asynchronous operations
 - Implement logging
+- Complete CRUD operations for ORM
 - Implement methods using DbParameters to prevent SQL Injections
 
 ## License
