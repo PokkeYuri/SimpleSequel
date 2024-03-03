@@ -1,4 +1,13 @@
-# SimpleSequel
+<p align="center">
+  <a>
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://github.com/PokkeYuri/SimpleSequel/assets/86960788/21096292-0d1c-4217-bce9-cb653fff301e">
+      <img src="https://github.com/PokkeYuri/SimpleSequel/assets/86960788/21096292-0d1c-4217-bce9-cb653fff301e" height="256">
+    </picture>
+  <h1 align="center">Simple Sequel</h1>
+  </a>
+</p>
+
 
 SimpleSequel is a lightweight .NET library designed to simplify interaction with databases. It provides intuitive extensions for executing SQL commands and queries and is built on top of ADO.NET.
 
