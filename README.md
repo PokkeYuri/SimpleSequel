@@ -2,7 +2,7 @@
   <a>
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="https://github.com/PokkeYuri/SimpleSequel/assets/86960788/21096292-0d1c-4217-bce9-cb653fff301e">
-      <img src="https://github.com/PokkeYuri/SimpleSequel/assets/86960788/21096292-0d1c-4217-bce9-cb653fff301e" height="256">
+      <img src="https://github.com/PokkeYuri/SimpleSequel/assets/86960788/21096292-0d1c-4217-bce9-cb653fff301e" height="128">
     </picture>
   <h1 align="center">Simple Sequel</h1>
   </a>
